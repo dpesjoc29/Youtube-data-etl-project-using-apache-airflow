@@ -1,7 +1,18 @@
 import re
 import pandas as pd
 import emoji
+import boto3
+from decouple import config
 
+
+AWS_ACCESS_KEY_ID = config("AWS_ACCESS_KEY_ID")
+AWS_SECRET_ACCESS_KEY  = config("AWS_SECRET_ACCESS_KEY")
+
+s3_client = boto3.client(
+    "s3",
+    aws_access_key_id=AWS_ACCESS_KEY_ID,
+    aws_secret_access_key=AWS_SECRET_ACCESS_KEY,
+    )
 
 def clean_comment(comment):
     # Remove emojis
@@ -43,8 +54,13 @@ def transform_and_load_data():
 
     # Save the transformed data to a new CSV file
     df.to_csv(output_file, index=False)
+    print(f"Transformed data saved to {output_file} in S3 bucket.")
+    df.to_csv(f"s3://dipesh-airflow-youtube-bucket/{output_file}", index=False, storage_options={
+        "key":AWS_ACCESS_KEY_ID,
+        "secret" : AWS_SECRET_ACCESS_KEY,
+    })
+    # print()
 
-    print(f"Transformed data saved to {output_file}.")
     print("Task Completed. Data is transformed successfully.")
 
 transform_and_load_data()
